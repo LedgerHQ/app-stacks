@@ -116,8 +116,7 @@ void extractHDPath(uint32_t rx, uint32_t offset) {
     }
 }
 
-bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
-    UNUSED(tx);
+bool process_chunk(uint32_t rx) {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
     if (rx < OFFSET_DATA) {
@@ -210,8 +209,6 @@ void app_init() {
     zb_init();
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
 
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
@@ -266,5 +263,3 @@ void app_main() {
         END_TRY;
     }
 }
-
-#pragma clang diagnostic pop
