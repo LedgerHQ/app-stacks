@@ -77,10 +77,13 @@ endef
 $(error "$(error_message)")
 endif
 
-APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"  --tlvraw 9F:01
+APP_LOAD_PARAMS = --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"  --tlvraw 9F:01
 DEFINES += HAVE_PENDING_REVIEW_SCREEN
 
+APP_LOAD_PARAMS += --curve secp256k1
+
 ifeq ($(TARGET_NAME),TARGET_NANOS)
+APP_LOAD_PARAMS += --appFlags 0x200
 APP_STACK_SIZE:=3100
 ICONNAME:=$(CURDIR)/nanos_icon.gif
 OUTPUT_ELF:= $(CURDIR)/output/app_s.elf
@@ -88,6 +91,7 @@ OUTPUT_INSTALLER := $(CURDIR)/pkg/installer_s.sh
 endif
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
+APP_LOAD_PARAMS += --appFlags 0x000
 SCRIPT_LD:=$(CURDIR)/script_x.ld
 ICONNAME:=$(CURDIR)/nanox_icon.gif
 OUTPUT_ELF:= $(CURDIR)/output/app_x.elf
