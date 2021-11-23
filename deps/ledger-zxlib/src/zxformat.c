@@ -73,14 +73,14 @@ uint8_t intstr_to_fpstr_inplace(char *number, size_t number_max_size, uint8_t de
     if (numChars < decimalPlaces + 1) {
         // Move to end
         const uint16_t padSize = decimalPlaces - numChars + 1;
-        MEMMOVE(number + padSize, number, numChars);
+        MEMCPY(number + padSize, number, numChars);
         MEMSET(number, '0', padSize);
         numChars = strlen(number);
     }
 
     // add decimal point
     const uint16_t pointPosition = numChars - decimalPlaces;
-    MEMMOVE(number + pointPosition + 1, number + pointPosition, decimalPlaces);  // shift content
+    MEMCPY(number + pointPosition + 1, number + pointPosition, decimalPlaces);  // shift content
     number[pointPosition] = '.';
 
     numChars = strlen(number);
