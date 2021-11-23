@@ -24,7 +24,7 @@
 
 // This macros are kept for backwards compatibility
 // the most recent SDK has unified implementations and deprecated the original os_***
-#define MEMCPY memmove
+#define MEMCPY memcpy
 #define MEMMOVE memmove
 #define MEMSET memset
 #define MEMCMP memcmp
