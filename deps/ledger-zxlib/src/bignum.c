@@ -16,6 +16,7 @@
 #include "zxtypes.h"
 #include "bignum.h"
 
+
 bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
                                    const uint8_t *inBCD, uint16_t inBCDLen) {
     static const char hexchars[] = "0123456789ABCDEF";
@@ -27,7 +28,7 @@ bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (inBCDLen * 2 > outBufferLen) {
-        strcpy(outBuffer, "ERR");
+        snprintf(outBuffer, outBufferLen, "ERR");
         return bool_false;
     }
 
@@ -44,7 +45,7 @@ bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (!started) {
-        strcpy(outBuffer, "0");
+        strlcpy(outBuffer, "0", outBufferLen);
     }
 
     return bool_true;
@@ -92,7 +93,7 @@ bool_t bignumBigEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (bcdInLen * 2 > outBufferLen) {
-        strcpy(outBuffer, "ERR");
+        strlcpy(outBuffer, "ERR", outBufferLen);
         return bool_false;
     }
 
@@ -110,7 +111,7 @@ bool_t bignumBigEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (!started) {
-        strcpy(outBuffer, "0");
+        strlcpy(outBuffer, "0", outBufferLen);
     }
 
     return bool_true;

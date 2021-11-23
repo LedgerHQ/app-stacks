@@ -196,7 +196,7 @@ void splitValueField() {
     print_value2("");
     uint16_t vlen = strlen(viewdata.value);
     if (vlen > MAX_CHARS_PER_VALUE2_LINE - 1) {
-        strcpy(viewdata.value2, viewdata.value + MAX_CHARS_PER_VALUE_LINE);
+        strlcpy(viewdata.value2, viewdata.value + MAX_CHARS_PER_VALUE_LINE, MAX_CHARS_PER_VALUE2_LINE);
         viewdata.value[MAX_CHARS_PER_VALUE_LINE] = 0;
     }
 }
@@ -211,7 +211,7 @@ void splitValueAddress() {
     print_value2("");
     const uint16_t vlen = strlen(viewdata.value);
     if (vlen > len) {
-        strcpy(viewdata.value2, viewdata.value + len);
+        strlcpy(viewdata.value2, viewdata.value + len, MAX_CHARS_PER_VALUE2_LINE);
         viewdata.value[len] = 0;
     }
 }

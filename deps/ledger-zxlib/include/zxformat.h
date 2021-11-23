@@ -173,7 +173,7 @@ __Z_INLINE uint8_t fpstr_to_str(char *out, uint16_t outLen, const char *number, 
             snprintf(out, outLen, "ERR");
             return 1;
         }
-        strcpy(out, number);
+        strlcpy(out, number, digits + 1);
         return 0;
     }
 
@@ -183,21 +183,33 @@ __Z_INLINE uint8_t fpstr_to_str(char *out, uint16_t outLen, const char *number, 
         return 1;
     }
 
+
     if (digits <= decimals) {
-        // First part
-        strcpy(out, "0.");
+        if (outLen < 2)
+          return 1;
+        if (outLen <= 2 + decimals)
+        {
+          snprintf(out, outLen, "ERR");
+          return 1;
+        }
+        strlcpy(out, "0.", 2);
         out += 2;
         MEMSET(out, '0', decimals - digits);
         out += decimals - digits;
     } else {
         const size_t shift = digits - decimals;
-        strcpy(out, number);
+        if (outLen <= shift + 1 + digits)
+        {
+          snprintf(out, outLen, "ERR");
+          return 1;
+        }
+        strlcpy(out, number, shift);
         number += shift;
         out += shift;
         *out++ = '.';
     }
 
-    strcpy(out, number);
+    strlcpy(out, number, outLen);
     return 0;
 }
 
