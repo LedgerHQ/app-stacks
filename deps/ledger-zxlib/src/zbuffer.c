@@ -54,7 +54,7 @@ zbuffer_error_e zb_allocate(uint16_t size) {
     zbuffer_internal.ptr = (uint8_t * )(&app_stack_canary + 4);
 
     uint32_t *zb_canary = (uint32_t * )(zbuffer_internal.ptr + zbuffer_internal.size + 4);
-    cx_rng((unsigned char *)&CANARY_EXPECTED_RANDOM, 4);
+    cx_rng_no_throw((unsigned char *)&CANARY_EXPECTED_RANDOM, 4);
     *zb_canary = CANARY_EXPECTED_RANDOM;
 #endif
     return zb_no_error;
