@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(NeoFuzzer VERSION 0.1.9 LANGUAGES C)
+project(BlockStackFuzzer VERSION 0.1.9 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 
