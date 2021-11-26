@@ -32,10 +32,17 @@ bool isTestnet() {
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
 #include "cx.h"
 
-void ripemd160(uint8_t *in, uint16_t inLen, uint8_t *out) {
+bool ripemd160(uint8_t *in, uint16_t inLen, uint8_t *out) {
     cx_ripemd160_t rip160;
-    cx_ripemd160_init_no_throw(&rip160);
-    cx_hash_no_throw(&rip160.header, CX_LAST, in, inLen, out, CX_RIPEMD160_SIZE);
+    if (cx_ripemd160_init_no_throw(&rip160) == CX_OK)
+    {
+        if (cx_hash_no_throw(&rip160.header, CX_LAST, in, inLen, out, CX_RIPEMD160_SIZE) != CX_OK)
+            explicit_bzero(out, CX_RIPEMD160_SIZE);
+        else
+            return true;
+    }
+    return false;
+
 }
 
 typedef struct {
@@ -83,7 +90,10 @@ uint16_t crypto_fillAddress_secp256k1(uint8_t *buffer, uint16_t buffer_len) {
     MEMZERO(buffer, buffer_len);
     answer_t *const answer = (answer_t *) buffer;
 
-    crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey));
+    if (!crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey)))
+    {
+        return 0;
+    }
 
     address_temp_t address_temp;
 
@@ -97,13 +107,13 @@ uint16_t crypto_fillAddress_secp256k1(uint8_t *buffer, uint16_t buffer_len) {
     return PK_LEN_SECP256K1 + outLen;
 }
 
-void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
+bool crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
     cx_ecfp_public_key_t cx_publicKey;
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
 
     if (pubKeyLen < PK_LEN_SECP256K1) {
-        return;
+        return false;
     }
 
     os_perso_derive_node_bip32(CX_CURVE_256K1,
@@ -111,12 +121,20 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
                                 HDPATH_LEN_DEFAULT,
                                 privateKeyData, NULL);
 
-    cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
-    cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
-    cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
+    int8_t err = cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
+    if (err == CX_OK)
+    {
+        err = cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
+        if (err == CX_OK)
+        {
+            err = cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
+        }
+    }
 
     explicit_bzero(&cx_privateKey, sizeof(cx_privateKey));
     explicit_bzero(privateKeyData, 32);
+    if (err != CX_OK)
+        return false;
 
     // Format pubkey
     for (int i = 0; i < 32; i++) {
@@ -128,18 +146,22 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     }
 
     memcpy(pubKey, cx_publicKey.W, PK_LEN_SECP256K1);
+    return true;
 }
 
 
-void crypto_extractPublicKeyHash(uint8_t *pubKeyHash, uint16_t pubKeyLen) {
+bool crypto_extractPublicKeyHash(uint8_t *pubKeyHash, uint16_t pubKeyLen) {
 
     if (pubKeyLen < CX_RIPEMD160_SIZE || pubKeyHash == NULL)
-        return;
+        return false;
 
     // gets the raw public key
     uint8_t publicKey[PK_LEN_SECP256K1];
 
-    crypto_extractPublicKey(hdPath, publicKey, PK_LEN_SECP256K1);
+    if (!crypto_extractPublicKey(hdPath, publicKey, PK_LEN_SECP256K1))
+    {
+        return false;
+    }
     {
         zemu_log("pubKey: ***");
         char buffer[PK_LEN_SECP256K1 * 3];
@@ -152,7 +174,7 @@ void crypto_extractPublicKeyHash(uint8_t *pubKeyHash, uint16_t pubKeyLen) {
     address_temp_t address_temp;
 
     cx_hash_sha256(publicKey, PK_LEN_SECP256K1, address_temp.hash_sha256, CX_SHA256_SIZE);
-    ripemd160(address_temp.hash_sha256, CX_SHA256_SIZE, pubKeyHash);         // RIPEMD-160
+    return ripemd160(address_temp.hash_sha256, CX_SHA256_SIZE, pubKeyHash);        // RIPEMD-160
 
 }
 
@@ -198,7 +220,12 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
         HDPATH_LEN_DEFAULT,
         privateKeyData, NULL);
 
-    cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
+    if (cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey) != CX_OK)
+    {
+        explicit_bzero(&cx_privateKey, sizeof(cx_privateKey));
+        explicit_bzero(privateKeyData, 32);
+        return zxerr_ledger_api_error;
+    }
 
     // Sign
     // cx_ecdsa_sign_no_throw(pvkey, mode, hashID, hash, hash_len, sig, &sig_len_, &info_)
@@ -226,7 +253,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     err_convert_e err = convertDERtoRSV(signature->der_signature, info,  signature->r, signature->s, &signature->v);
     if (err != no_error) {
       return zxerr_encoding_failed;
-    }
+    } 
 
     // return actual size using value from signatureLength
     *sigSize = sizeof_field(signature_t, r) +

@@ -52,7 +52,10 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
     uint8_t pubKeyHash[CX_RIPEMD160_SIZE];
 
-    crypto_extractPublicKeyHash(pubKeyHash, CX_RIPEMD160_SIZE);
+    if (!crypto_extractPublicKeyHash(pubKeyHash, CX_RIPEMD160_SIZE))
+    {
+        return parser_crypto_error;
+    }
 
     // Checks if this device is allowed to sign this transaction
     if (_check_pubkey_hash(&parser_state, pubKeyHash, CX_RIPEMD160_SIZE) != parser_ok)
@@ -93,7 +96,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
     CHECK_APP_CANARY()
 
-    if (displayIdx < 0 || displayIdx >= numItems) {
+    if (displayIdx >= numItems) {
         return parser_no_data;
     }
 

@@ -71,6 +71,7 @@ typedef enum {
     parser_unexpected_field,
     parser_value_out_of_range,
     parser_invalid_address,
+    parser_crypto_error,
 } parser_error_t;
 
 typedef struct {
