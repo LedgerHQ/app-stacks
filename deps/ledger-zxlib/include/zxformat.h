@@ -185,8 +185,6 @@ __Z_INLINE uint8_t fpstr_to_str(char *out, uint16_t outLen, const char *number, 
 
 
     if (digits <= decimals) {
-        if (outLen < 2)
-          return 1;
         if (outLen <= 2 + decimals)
         {
           snprintf(out, outLen, "ERR");
