@@ -97,7 +97,10 @@ uint16_t crypto_fillAddress_secp256k1(uint8_t *buffer, uint16_t buffer_len) {
 
     address_temp_t address_temp;
 
-    crypto_extractPublicKeyHash(address_temp.hash_ripe, CX_RIPEMD160_SIZE);
+    if (crypto_extractPublicKeyHash(address_temp.hash_ripe, CX_RIPEMD160_SIZE) < 0)
+    {
+      return 0;
+    }
 
     size_t outLen = sizeof_field(answer_t, address);
     if ( !is_valid_network_version(version) )

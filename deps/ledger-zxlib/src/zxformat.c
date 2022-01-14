@@ -80,7 +80,7 @@ uint8_t intstr_to_fpstr_inplace(char *number, size_t number_max_size, uint8_t de
 
     // add decimal point
     const uint16_t pointPosition = numChars - decimalPlaces;
-    MEMCPY(number + pointPosition + 1, number + pointPosition, decimalPlaces);  // shift content
+    MEMMOVE(number + pointPosition + 1, number + pointPosition, decimalPlaces);  // shift content
     number[pointPosition] = '.';
 
     numChars = strlen(number);

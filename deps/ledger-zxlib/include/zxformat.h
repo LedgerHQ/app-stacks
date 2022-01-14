@@ -190,7 +190,7 @@ __Z_INLINE uint8_t fpstr_to_str(char *out, uint16_t outLen, const char *number, 
           snprintf(out, outLen, "ERR");
           return 1;
         }
-        strlcpy(out, "0.", 2);
+        strlcpy(out, "0.", outLen);
         out += 2;
         MEMSET(out, '0', decimals - digits);
         out += decimals - digits;
