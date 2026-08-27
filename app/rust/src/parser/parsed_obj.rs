@@ -691,6 +691,56 @@ mod test {
         items
     }
 
+    /// Restrictive `Deny` stays implicit; permissive modes state their effect before the payload.
+    #[test]
+    fn test_post_condition_warning_only_for_permissive_modes() {
+        let input_path = {
+            let mut r = PathBuf::new();
+            r.push(env!("CARGO_MANIFEST_DIR"));
+            r.push("tests");
+            r.push("contract_call_with_fungible_postcondition");
+            r.set_extension("json");
+            r
+        };
+        let str = std::fs::read_to_string(input_path).expect("Error opening json file");
+        let json: ContractCallTx = serde_json::from_str(&str).unwrap();
+        let bytes = hex::decode(&json.raw).unwrap();
+
+        let mode_offset = {
+            let mut obj = ParsedObj::from_bytes(&bytes).unwrap();
+            obj.read(&bytes).unwrap();
+            let tx = obj.transaction().unwrap();
+            tx.transaction_modes.as_ptr() as usize - bytes.as_ptr() as usize + 1
+        };
+
+        let cases = [
+            (0x01u8, Some(("Unlisted transfers", "Allowed"))),
+            (0x02, None),
+            (0x03, Some(("Restrictions apply", "Originator only"))),
+        ];
+        let mut counts = [0usize; 3];
+
+        for (case_idx, (byte, warning)) in cases.iter().copied().enumerate() {
+            let mut patched = bytes.clone();
+            patched[mode_offset] = byte;
+
+            let items = review_items(&patched);
+            counts[case_idx] = items.len();
+            let is_warning = |key: &str| key == "Unlisted transfers" || key == "Restrictions apply";
+
+            match warning {
+                Some((key, value)) => {
+                    assert_eq!(items[3], (key.to_string(), value.to_string()));
+                    assert_eq!(items.iter().filter(|(k, _)| is_warning(k)).count(), 1);
+                }
+                None => assert!(!items.iter().any(|(k, _)| is_warning(k))),
+            }
+        }
+
+        assert_eq!(counts[0], counts[1] + 1);
+        assert_eq!(counts[2], counts[1] + 1);
+    }
+
     /// A genuine SIP-10 transfer is reviewed through the compact card, with the base items and
     /// post-conditions suppressed.
     ///
