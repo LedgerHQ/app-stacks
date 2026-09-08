@@ -2124,4 +2124,32 @@ describe('Standard', function () {
       await sim.close()
     }
   })
+
+  test.each(models.filter(({ name }) => name === 'nanox'))('STX-002 rejects 253 contract-call arguments before review', async function (m) {
+    const sim = new Zemu(m.path)
+    const dpath = "m/44'/5757'/0'/0/0"
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new StacksApp(sim.getTransport())
+      const pk = await app.getAddressAndPubKey(dpath, AddressVersion.TestnetSingleSig)
+      expect(pk.returnCode).toEqual(0x9000)
+
+      const tx = await makeUnsignedContractCall({
+        contractAddress: 'SP000000000000000000002Q6VF78',
+        contractName: 'long_args_contract',
+        functionName: 'overflow',
+        functionArgs: Array.from({ length: 253 }, (_, index) => uintCV(index)),
+        network: STACKS_TESTNET,
+        fee: 10n,
+        nonce: 0n,
+        publicKey: pk.publicKey.toString('hex'),
+      })
+
+      const signature = await app.sign(dpath, Buffer.from(tx.serialize(), 'hex'))
+      expect(signature.returnCode).not.toEqual(0x9000)
+      await sim.waitUntilScreenIs(sim.getMainMenuSnapshot())
+    } finally {
+      await sim.close()
+    }
+  })
 })
