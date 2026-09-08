@@ -110,19 +110,38 @@ where
 /// renderer and the item-hiding predicate that feeds `num_items` -- unreachable from both the
 /// unit tests and the fuzzer. Recognising one fixed contract keeps them exercised.
 #[cfg(any(test, feature = "fuzzing"))]
-pub fn get_token_info<T, U>(_contract_address: T, contract_name: U) -> Option<TokenInfo<'static>>
+const HOST_TOKEN_CONTRACT_ADDRESS: &[u8] = b"STPRKQJPZN6V35T1JNW334KEKEMPSW21B3TAPHNV";
+#[cfg(any(test, feature = "fuzzing"))]
+const HOST_TOKEN_CONTRACT_NAME: &[u8] = b"hello-world";
+
+#[cfg(any(test, feature = "fuzzing"))]
+pub fn get_token_info<T, U>(contract_address: T, contract_name: U) -> Option<TokenInfo<'static>>
 where
     T: AsRef<[u8]>,
     U: AsRef<[u8]>,
 {
-    if contract_name.as_ref() != b"hello-world" {
+    if contract_address.as_ref() != HOST_TOKEN_CONTRACT_ADDRESS
+        || contract_name.as_ref() != HOST_TOKEN_CONTRACT_NAME
+    {
         return None;
     }
 
     Some(TokenInfo {
-        contract_address: b"SP2ZD731ANQZT6J4K3F5N8A40ZXWXC1XFXHVVQFKE.hello-world",
+        contract_address: b"STPRKQJPZN6V35T1JNW334KEKEMPSW21B3TAPHNV.hello-world",
         token_symbol: b"HELLO",
         decimals: 6,
         post_condition_code: Some(FungibleConditionCode::SentGe),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn host_registry_matches_the_full_contract_key() {
+        assert!(get_token_info(HOST_TOKEN_CONTRACT_ADDRESS, HOST_TOKEN_CONTRACT_NAME).is_some());
+        assert!(get_token_info(b"SP2ZD731ANQZT6J4K3F5N8A40ZXWXC1XFXHVVQFKE", HOST_TOKEN_CONTRACT_NAME).is_none());
+        assert!(get_token_info(HOST_TOKEN_CONTRACT_ADDRESS, b"other-contract").is_none());
+    }
 }
