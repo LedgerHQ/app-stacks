@@ -2146,7 +2146,7 @@ describe('Standard', function () {
       })
 
       const signature = await app.sign(dpath, Buffer.from(tx.serialize(), 'hex'))
-      expect(signature.returnCode).not.toEqual(0x9000)
+      expect(signature.returnCode).toEqual(0x6984)
       await sim.waitUntilScreenIs(sim.getMainMenuSnapshot())
     } finally {
       await sim.close()
