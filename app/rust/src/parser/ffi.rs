@@ -112,10 +112,7 @@ pub unsafe extern "C" fn _getItem(
 /// signature covers text past what the review can page through. JWTs and structured messages
 /// have their own review flows and always report 0.
 #[no_mangle]
-pub unsafe extern "C" fn _tx_requires_blindsign(
-    tx_t: *const parse_tx_t,
-    requires: *mut u8,
-) -> u32 {
+pub unsafe extern "C" fn _tx_requires_blindsign(tx_t: *const parse_tx_t, requires: *mut u8) -> u32 {
     if requires.is_null() {
         return ParserError::NoData as _;
     }

@@ -7,10 +7,8 @@ mod versioned_contract;
 use nom::number::complete::le_u8;
 
 use self::{
-    contract_call::TransactionContractCallWrapper,
-    smart_contract::TransactionSmartContract,
-    token_transfer::StxTokenTransfer,
-    versioned_contract::VersionedSmartContract,
+    contract_call::TransactionContractCallWrapper, smart_contract::TransactionSmartContract,
+    token_transfer::StxTokenTransfer, versioned_contract::VersionedSmartContract,
 };
 
 use super::{ContractName, C32_ENCODED_ADDRS_LENGTH};
