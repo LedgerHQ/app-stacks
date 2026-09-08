@@ -305,7 +305,7 @@ impl<'a> Transaction<'a> {
 
         // origin + nonce + fee-rate + optional warning + payload + post-conditions
         header_items
-            .checked_add(self.payload.num_items(hide_sip10_details))
+            .checked_add(self.payload.num_items(hide_sip10_details)?)
             .and_then(|res| res.checked_add(num_items_post_conditions))
             .ok_or(ParserError::ValueOutOfRange)
     }
